@@ -13,7 +13,7 @@ jobs:
       matrix:
         python:
           - { version: "3.12", filter: "cp312-*" }
-          - { version: "3.13", filter: "cp312-*" }
+          - { version: "3.13", filter: "cp313-*" }
         package:
           - { name: "archspec", version: "0.2.5", pure: true }
           - { name: "astc-encoder-py", version: "0.1.12" }
@@ -38,7 +38,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.x'
+          python-version: ${{ matrix.python.version }}
 
       - name: Find sdist
         if: ${{ !matrix.package.repo }}

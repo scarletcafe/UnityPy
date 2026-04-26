@@ -1,4 +1,4 @@
-name: Build UnityPy for Pyodide
+name: Build UnityPy dependencies for Pyodide
 
 on:
   push:

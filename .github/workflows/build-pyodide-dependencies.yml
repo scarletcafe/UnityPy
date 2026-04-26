@@ -38,14 +38,14 @@ jobs:
           python-version: '3.x'
 
       - name: Install yq
-        run:
+        run: |
           pip install yq
 
       - name: Find sdist
         env:
           PACKAGE_NAME: ${{ matrix.package.name }}
           PACKAGE_VERSION: ${{ matrix.package.version }}
-        run:
+        run: |
           mkdir -p build/${PACKAGE_NAME}
           export PACKAGE_SDIST_URL=`curl -L "https://pypi.org/pypi/${PACKAGE_NAME}/json" | jq -r ".releases.[\"${PACKAGE_VERSION}\"] | map(select(.packagetype == \"sdist\")) | .[0].url"`
           wget -O build/${PACKAGE_NAME}.tar.gz ${PACKAGE_SDIST_URL}

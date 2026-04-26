@@ -11,19 +11,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        python:
+          - { version: "3.12", filter: "cp312-*" }
+          - { version: "3.13", filter: "cp312-*" }
         package:
-          - { name: "archspec", version: "0.2.5" }
+          - { name: "archspec", version: "0.2.5", pure: true }
           - { name: "astc-encoder-py", version: "0.1.12" }
-          - { name: "attrs", version: "26.1.0" }
+          - { name: "attrs", version: "26.1.0", pure: true }
           - { name: "brotli", version: "1.2.0" }
           - { name: "etcpak", version: "0.9.15" }
           - { name: "fmod_toolkit", version: "0.1.3" }
-          - { name: "fsspec", version: "2026.3.0" }
+          - { name: "fsspec", version: "2026.3.0", pure: true }
           - { name: "lz4", version: "4.4.5" }
           - { name: "pillow", version: "12.2.0" }
-          - { name: "pyfmodex", version: "0.7.2" }
+          - { name: "pyfmodex", version: "0.7.2", pure: true }
           - { name: "texture2ddecoder", version: "1.0.6" }
-          - { name: "TypeTreeGeneratorAPI", version: "0.0.10" }
+          - { name: "TypeTreeGeneratorAPI", repo: "UnityPy-Org/TypeTreeGeneratorAPI", commit: "df79bd6a786d4ba52ed4a7b3d40047ecf578256b" }
           - { name: "UnityPy", version: "1.25.0" }
 
     steps:
@@ -37,11 +40,8 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Install yq
-        run: |
-          pip install yq
-
       - name: Find sdist
+        if: ${{ !matrix.package.repo }}
         env:
           PACKAGE_NAME: ${{ matrix.package.name }}
           PACKAGE_VERSION: ${{ matrix.package.version }}
@@ -51,14 +51,32 @@ jobs:
           wget -O build/${PACKAGE_NAME}.tar.gz ${PACKAGE_SDIST_URL}
           tar -xf build/${PACKAGE_NAME}.tar.gz -C build/${PACKAGE_NAME} --strip-components 1
 
-      - name: Build wheels
+      - name: Clone repository
+        if: ${{ matrix.package.repo }}
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ matrix.package.repo }}
+          ref: ${{ matrix.package.commit }}
+          path: build/${{ matrix.package.name }}
+
+      - name: Build wheels as pure
+        if: ${{ matrix.package.pure }}
+        env:
+          PACKAGE_NAME: ${{ matrix.package.name }}
+          PACKAGE_VERSION: ${{ matrix.package.version }}
+        run: |
+          python -m pip wheel -w wheelhouse build/${PACKAGE_NAME}
+
+      - name: Build wheels with cibuildwheel
+        if: ${{ !matrix.package.pure }}
         uses: pypa/cibuildwheel@v3.4.1
         with:
             package-dir: build/${{ matrix.package.name }}
         env:
           CIBW_PLATFORM: pyodide
+          CIBW_BUILD: ${{ matrix.python.filter }}
 
       - uses: actions/upload-artifact@v7
         with:
-          name: "pyodide-${{ matrix.package.name }}-wheels"
+          name: "pyodide-${{ matrix.python.version }}-wheels"
           path: ./wheelhouse/*.whl

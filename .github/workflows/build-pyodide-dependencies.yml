@@ -5,8 +5,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_pyodide_wheels:
-    name: Build pyodide wheels for ${{ matrix.package.name }}
+  build_pyodide_deps_wheels:
+    name: Build pyodide ${{ matrix.python.version }} wheels for ${{ matrix.package.name }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
